@@ -13,8 +13,8 @@
 ```bash
 cd g:\TRAE项目组\排班表
 git init
-git add .
-git commit -m "Initial commit: 档期管家 v2.2.0"
+git add index.html sw.js manifest.json tubiao.png README.md DEPLOY.md .gitignore
+git commit -m "Initial commit: 档期管家 v3.0.0"
 git branch -M main
 git remote add origin https://github.com/你的用户名/你的仓库名.git
 git push -u origin main
@@ -59,5 +59,18 @@ https://你的用户名.github.io/仓库名/
 
 ### 数据丢失？
 - 数据存储在LocalStorage
-- 清除浏览器缓存会导致数据丢失
-- 建议定期截图备份重要数据
+- v3.0.0+版本有数据保险箱保护，更新不会丢失数据
+- 建议定期使用"📤 导出数据"功能备份
+- 需要恢复时使用"📥 导入数据"功能
+
+### 离线使用？
+- v3.0.0+支持PWA离线模式
+- 第一次需要联网加载
+- 之后可以离线使用
+- 有网时会自动检查更新
+
+### 需要更新版本？
+1. 修改代码并推送到GitHub
+2. GitHub Pages会自动部署
+3. 用户刷新页面即可获取新版本
+4. 数据会自动保留（v3.0.0+）
