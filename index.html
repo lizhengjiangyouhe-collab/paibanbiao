@@ -66,7 +66,7 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        const APP_VERSION = "v3.0.0 (PWA版)";
+        const APP_VERSION = "v3.1.0 (行程预约版)";
         const STORAGE_KEY = "dangqi_guanjia_v1";
 
         const SHIFT_TYPES = ['W1', 'W2', 'R1', 'R2'];
@@ -76,6 +76,12 @@
             'xiutai': '秀太',
             'xishihui': '喜事汇',
             'other': '其他'
+        };
+
+        const APPOINTMENT_TYPES = {
+            'meeting': { label: '见客户', emoji: '☕' },
+            'rehearsal': { label: '彩排', emoji: '🎤' },
+            'other': { label: '其他', emoji: '📅' }
         };
 
         const saveDataToStorage = (data) => {
@@ -107,6 +113,7 @@
                 const migratedData = {
                     shiftAnchor: oldAnchor ? JSON.parse(oldAnchor) : null,
                     weddings: oldWeddings ? JSON.parse(oldWeddings) : {},
+                    appointments: {},
                     totalPublicHolidays: oldHolidays ? Number(oldHolidays) : 0,
                     _migrated: true,
                     _version: APP_VERSION
@@ -121,6 +128,7 @@
             const [currentDate, setCurrentDate] = useState(new Date());
             const [shiftAnchor, setShiftAnchor] = useState(null); 
             const [weddings, setWeddings] = useState({}); 
+            const [appointments, setAppointments] = useState({}); 
             const [totalPublicHolidays, setTotalPublicHolidays] = useState(0);
             
             const [selectedDate, setSelectedDate] = useState(null);
@@ -140,6 +148,7 @@
                 if (data) {
                     if (data.shiftAnchor) setShiftAnchor(data.shiftAnchor);
                     if (data.weddings) setWeddings(data.weddings);
+                    if (data.appointments) setAppointments(data.appointments);
                     if (typeof data.totalPublicHolidays === 'number') {
                         setTotalPublicHolidays(data.totalPublicHolidays);
                     }
@@ -150,17 +159,19 @@
                 const data = {
                     shiftAnchor,
                     weddings,
+                    appointments,
                     totalPublicHolidays,
                     _version: APP_VERSION,
                     _lastUpdated: new Date().toISOString()
                 };
                 saveDataToStorage(data);
-            }, [shiftAnchor, weddings, totalPublicHolidays]);
+            }, [shiftAnchor, weddings, appointments, totalPublicHolidays]);
 
             const exportData = () => {
                 const data = {
                     shiftAnchor,
                     weddings,
+                    appointments,
                     totalPublicHolidays,
                     _exportedAt: new Date().toISOString(),
                     _version: APP_VERSION
@@ -187,6 +198,7 @@
                             if (data.weddings) {
                                 if (data.shiftAnchor) setShiftAnchor(data.shiftAnchor);
                                 setWeddings(data.weddings);
+                                if (data.appointments) setAppointments(data.appointments);
                                 if (typeof data.totalPublicHolidays === 'number') {
                                     setTotalPublicHolidays(data.totalPublicHolidays);
                                 }
@@ -200,6 +212,41 @@
                     };
                     reader.readAsText(file);
                 }
+            };
+
+            const addAppointment = (dateStr) => {
+                setAppointments(prev => ({
+                    ...prev,
+                    [dateStr]: [
+                        ...(prev[dateStr] || []),
+                        {
+                            id: Date.now(),
+                            time: '10:00',
+                            type: 'other',
+                            detail: ''
+                        }
+                    ]
+                }));
+            };
+
+            const updateAppointment = (dateStr, index, updates) => {
+                setAppointments(prev => ({
+                    ...prev,
+                    [dateStr]: prev[dateStr].map((apt, i) => 
+                        i === index ? { ...apt, ...updates } : apt
+                    )
+                }));
+            };
+
+            const deleteAppointment = (dateStr, index) => {
+                setAppointments(prev => {
+                    const list = (prev[dateStr] || []).filter((_, i) => i !== index);
+                    if (list.length === 0) {
+                        const { [dateStr]: _, ...rest } = prev;
+                        return rest;
+                    }
+                    return { ...prev, [dateStr]: list };
+                });
             };
 
             const usedHolidays = useMemo(() => {
@@ -286,13 +333,49 @@
                         results.push({
                             dateStr,
                             date,
+                            type: 'wedding',
                             wedding
                         });
                     }
                 });
+
+                Object.keys(appointments).forEach(dateStr => {
+                    const aptList = appointments[dateStr];
+                    aptList.forEach(apt => {
+                        let match = false;
+                        
+                        if (apt.detail && apt.detail.toLowerCase().includes(query)) {
+                            match = true;
+                        }
+                        
+                        if (APPOINTMENT_TYPES[apt.type] && APPOINTMENT_TYPES[apt.type].label.includes(query)) {
+                            match = true;
+                        }
+                        
+                        if (apt.time && apt.time.includes(query)) {
+                            match = true;
+                        }
+                        
+                        const date = new Date(dateStr);
+                        const monthDay = `${date.getMonth() + 1}月${date.getDate()}日`;
+                        const fullDate = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+                        if (monthDay.includes(query) || fullDate.includes(query) || dateStr.includes(query)) {
+                            match = true;
+                        }
+                        
+                        if (match) {
+                            results.push({
+                                dateStr,
+                                date,
+                                type: 'appointment',
+                                appointment: apt
+                            });
+                        }
+                    });
+                });
                 
                 return results.sort((a, b) => new Date(a.dateStr) - new Date(b.dateStr));
-            }, [searchQuery, weddings]);
+            }, [searchQuery, weddings, appointments]);
 
             const jumpToDate = (dateObj) => {
                 setCurrentDate(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
@@ -400,13 +483,24 @@
                                                         }`}>
                                                             {isWork ? '上班' : '休息'}
                                                         </span>
-                                                        <span className="text-xs font-medium text-gray-400">
-                                                            {LOCATIONS[result.wedding.location]}
-                                                        </span>
+                                                        {result.type === 'wedding' ? (
+                                                            <span className="text-xs font-medium text-purple-500">
+                                                                💍 {LOCATIONS[result.wedding.location]}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs font-medium text-orange-500">
+                                                                {APPOINTMENT_TYPES[result.appointment.type]?.emoji} {APPOINTMENT_TYPES[result.appointment.type]?.label}
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    {result.wedding.note && (
+                                                    {result.type === 'wedding' && result.wedding.note && (
                                                         <p className="text-sm text-gray-600 line-clamp-2">
                                                             {result.wedding.note}
+                                                        </p>
+                                                    )}
+                                                    {result.type === 'appointment' && (
+                                                        <p className="text-sm text-gray-600 line-clamp-2">
+                                                            {result.appointment.time} {result.appointment.detail}
                                                         </p>
                                                     )}
                                                 </div>
@@ -449,6 +543,7 @@
                                 const shift = getShiftTypeForDate(dateStr);
                                 const weddingInfo = weddings[dateStr] || {};
                                 const hasWedding = weddingInfo.hasWedding;
+                                const aptList = appointments[dateStr] || [];
                                 
                                 let lunarFullStr = '';
                                 if (typeof Lunar !== 'undefined') {
@@ -508,11 +603,25 @@
                                                     <span className="w-1.5 h-1.5 bg-[#FF9500] shadow-sm rounded-full mt-1.5"></span>
                                                 )}
                                             </div>
-                                            {shift && (
-                                                <span className={`text-[10px] font-bold ${shiftColor}`}>
-                                                    {isWork ? '班' : '休'}
-                                                </span>
-                                            )}
+                                            <div className="flex items-center gap-0.5">
+                                                {shift && (
+                                                    <span className={`text-[10px] font-bold ${shiftColor}`}>
+                                                        {isWork ? '班' : '休'}
+                                                    </span>
+                                                )}
+                                                {aptList.length > 0 && (
+                                                    <div className="flex gap-0.5">
+                                                        {aptList.slice(0, 2).map((apt, idx) => (
+                                                            <span key={idx} className="text-[11px]">
+                                                                {APPOINTMENT_TYPES[apt.type]?.emoji}
+                                                            </span>
+                                                        ))}
+                                                        {aptList.length > 2 && (
+                                                            <span className="text-[10px] text-gray-500">+{aptList.length - 2}</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className={`w-full mt-0 pl-0.5 ${lunarColor}`}>
@@ -552,6 +661,10 @@
                                     <div className="w-1.5 h-1.5 bg-[#FF9500] shadow-sm rounded-full ml-1.5"></div>
                                     <span className="text-[12px] text-gray-500 ml-1.5">日期旁小圆点代表当日记有详细备注</span>
                                 </div>
+                                <div className="flex items-center gap-2 col-span-2">
+                                    <span className="text-[14px]">☕🎤📅</span>
+                                    <span className="text-[12px] text-gray-500 ml-1.5">Emoji代表当日有行程预约</span>
+                                </div>
                                 
                                 <div className="col-span-2 mt-1 p-3 bg-white/60 rounded-xl flex justify-between items-center border border-gray-200/60">
                                     <div className="flex items-center gap-1.5">
@@ -580,6 +693,7 @@
                                         const dateStr = formatDate(selectedDate);
                                         const shift = getShiftTypeForDate(dateStr);
                                         const weddingInfo = weddings[dateStr] || { hasWedding: false, location: 'xiutai', note: '', hasSubstitute: false };
+                                        const aptList = appointments[dateStr] || [];
                                         const isWork = shift === 'W1' || shift === 'W2';
                                         const isRest = shift === 'R1' || shift === 'R2';
                                         
@@ -710,6 +824,82 @@
                                                             })()}
                                                         </div>
                                                     )}
+                                                </div>
+
+                                                <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                                                            <span className="text-xl">📋</span> 行程预约
+                                                        </span>
+                                                        <button
+                                                            onClick={() => addAppointment(dateStr)}
+                                                            className="text-sm font-semibold text-blue-500 flex items-center gap-1"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                            </svg>
+                                                            添加
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="space-y-3">
+                                                        {aptList.map((apt, index) => (
+                                                            <div key={index} className="bg-[#F2F2F7] rounded-xl p-3 space-y-3">
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-lg">{APPOINTMENT_TYPES[apt.type]?.emoji}</span>
+                                                                        <span className="text-sm font-semibold text-gray-700">{APPOINTMENT_TYPES[apt.type]?.label}</span>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => deleteAppointment(dateStr, index)}
+                                                                        className="text-red-500 p-1"
+                                                                    >
+                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-3">
+                                                                    <div>
+                                                                        <div className="text-xs text-gray-400 font-semibold mb-1">时间</div>
+                                                                        <input
+                                                                            type="time"
+                                                                            value={apt.time}
+                                                                            onChange={(e) => updateAppointment(dateStr, index, { time: e.target.value })}
+                                                                            className="w-full p-2 bg-white rounded-lg text-[14px] border border-gray-200"
+                                                                        />
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-xs text-gray-400 font-semibold mb-1">类型</div>
+                                                                        <select
+                                                                            value={apt.type}
+                                                                            onChange={(e) => updateAppointment(dateStr, index, { type: e.target.value })}
+                                                                            className="w-full p-2 bg-white rounded-lg text-[14px] border border-gray-200"
+                                                                        >
+                                                                            {Object.entries(APPOINTMENT_TYPES).map(([key, val]) => (
+                                                                                <option key={key} value={key}>{val.emoji} {val.label}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-xs text-gray-400 font-semibold mb-1">详情</div>
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="添加详情..."
+                                                                        value={apt.detail}
+                                                                        onChange={(e) => updateAppointment(dateStr, index, { detail: e.target.value })}
+                                                                        className="w-full p-2 bg-white rounded-lg text-[14px] border border-gray-200"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                        {aptList.length === 0 && (
+                                                            <div className="text-center py-6 text-gray-400 text-sm">
+                                                                暂无行程，点击上方「添加」创建
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </>
                                         );

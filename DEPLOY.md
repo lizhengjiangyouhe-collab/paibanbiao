@@ -14,7 +14,7 @@
 cd g:\TRAE项目组\排班表
 git init
 git add index.html sw.js manifest.json tubiao.png README.md DEPLOY.md .gitignore
-git commit -m "Initial commit: 档期管家 v3.0.0"
+git commit -m "Initial commit: 档期管家 v3.1.0"
 git branch -M main
 git remote add origin https://github.com/你的用户名/你的仓库名.git
 git push -u origin main
