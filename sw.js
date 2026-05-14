@@ -1,9 +1,14 @@
-const CACHE_NAME = 'dangqi-guanjia-v1';
+const CACHE_NAME = 'dangqi-guanjia-v2';
 const urlsToCache = [
   '/',
   '/index.html',
   '/tubiao.png',
-  '/manifest.json'
+  '/manifest.json',
+  'https://cdn.tailwindcss.com',
+  'https://unpkg.com/react@18/umd/react.production.min.js',
+  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
+  'https://unpkg.com/@babel/standalone/babel.min.js',
+  'https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js'
 ];
 
 self.addEventListener('install', event => {
@@ -26,7 +31,7 @@ self.addEventListener('fetch', event => {
         }
         return fetch(event.request)
           .then(response => {
-            if (!response || response.status !== 200 || response.type !== 'basic') {
+            if (!response || response.status !== 200) {
               return response;
             }
             const responseToCache = response.clone();
