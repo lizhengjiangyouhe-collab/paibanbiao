@@ -14,11 +14,11 @@
 
     <meta http-equiv="Cache-Control" content="public, max-age=86400">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+    <script src="libs/tailwindcss.js"></script>
+    <script src="libs/react.production.min.js"></script>
+    <script src="libs/react-dom.production.min.js"></script>
+    <script src="libs/babel.min.js"></script>
+    <script src="libs/lunar.js"></script>
 
     <style>
         ::-webkit-scrollbar { display: none; }
@@ -130,6 +130,7 @@
             const [weddings, setWeddings] = useState({}); 
             const [appointments, setAppointments] = useState({}); 
             const [totalPublicHolidays, setTotalPublicHolidays] = useState(0);
+            const [isDataLoaded, setIsDataLoaded] = useState(false); // 安全锁：确保本地数据读取完毕
             
             const [selectedDate, setSelectedDate] = useState(null);
             const [isDayModalOpen, setIsDayModalOpen] = useState(false);
@@ -153,9 +154,12 @@
                         setTotalPublicHolidays(data.totalPublicHolidays);
                     }
                 }
+                setIsDataLoaded(true); // 本地数据安全加载完毕，解开安全锁
             }, []);
 
             useEffect(() => {
+                if (!isDataLoaded) return; // 安全锁未解开时，绝对不自动保存，防止覆盖空数据！
+                
                 const data = {
                     shiftAnchor,
                     weddings,
@@ -165,7 +169,7 @@
                     _lastUpdated: new Date().toISOString()
                 };
                 saveDataToStorage(data);
-            }, [shiftAnchor, weddings, appointments, totalPublicHolidays]);
+            }, [shiftAnchor, weddings, appointments, totalPublicHolidays, isDataLoaded]);
 
             const exportData = () => {
                 const data = {

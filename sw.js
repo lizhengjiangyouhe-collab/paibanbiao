@@ -1,14 +1,14 @@
-const CACHE_NAME = 'dangqi-guanjia-v2';
+const CACHE_NAME = 'dangqi-guanjia-v3';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/tubiao.png',
-  '/manifest.json',
-  'https://cdn.tailwindcss.com',
-  'https://unpkg.com/react@18/umd/react.production.min.js',
-  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-  'https://unpkg.com/@babel/standalone/babel.min.js',
-  'https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js'
+  './',
+  './index.html',
+  './tubiao.png',
+  './manifest.json',
+  './libs/tailwindcss.js',
+  './libs/react.production.min.js',
+  './libs/react-dom.production.min.js',
+  './libs/babel.min.js',
+  './libs/lunar.js'
 ];
 
 self.addEventListener('install', event => {
