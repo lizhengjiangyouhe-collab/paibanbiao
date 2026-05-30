@@ -582,18 +582,35 @@
 
                                 if (hasWedding) {
                                     const locText = weddingInfo.location ? LOCATIONS[weddingInfo.location] : '婚礼';
+                                    const isTentative = weddingInfo.isTentative;
+                                    const displayText = isTentative ? `预·${locText}` : locText;
+                                    
                                     if (!isWork) {
-                                        cardBg = 'bg-[#F3E8FF] border-[#D8B4FE]'; 
-                                        if(!isToday) dateColor = 'text-[#6B21A8]'; 
-                                        shiftColor = 'text-[#9333EA]'; 
-                                        lunarColor = 'text-[#9333EA]';
-                                        weddingBadgeText = <div className="text-[#6B21A8] text-[11px] font-extrabold w-full text-center mt-auto pb-0.5 tracking-wider whitespace-nowrap overflow-visible">{locText}</div>;
+                                        if (isTentative) {
+                                            cardBg = 'bg-[#FAF5FF] border-dashed border-[#C7D2FE]'; 
+                                            if(!isToday) dateColor = 'text-[#6B21A8]'; 
+                                            shiftColor = 'text-[#9333EA]'; 
+                                            lunarColor = 'text-[#9333EA]';
+                                        } else {
+                                            cardBg = 'bg-[#F3E8FF] border-[#D8B4FE]'; 
+                                            if(!isToday) dateColor = 'text-[#6B21A8]'; 
+                                            shiftColor = 'text-[#9333EA]'; 
+                                            lunarColor = 'text-[#9333EA]';
+                                        }
+                                        weddingBadgeText = <div className="text-[#6B21A8] text-[11px] font-extrabold w-full text-center mt-auto pb-0.5 tracking-wider whitespace-nowrap overflow-visible">{displayText}</div>;
                                     } else if (!weddingInfo.hasSubstitute && !weddingInfo.usePublicHoliday) {
-                                        cardBg = 'bg-[#FEE2E2] border-[#FCA5A5]'; 
-                                        if(!isToday) dateColor = 'text-[#991B1B]'; 
-                                        shiftColor = 'text-[#EF4444]'; 
-                                        lunarColor = 'text-[#EF4444]';
-                                        weddingBadgeText = <div className="text-[#991B1B] text-[11px] font-extrabold w-full text-center mt-auto pb-0.5 tracking-wider whitespace-nowrap overflow-visible">{locText}</div>;
+                                        if (isTentative) {
+                                            cardBg = 'bg-[#FFFDF2] border-dashed border-[#FCD34D]'; 
+                                            if(!isToday) dateColor = 'text-[#B45309]'; 
+                                            shiftColor = 'text-[#D97706]'; 
+                                            lunarColor = 'text-[#D97706]';
+                                        } else {
+                                            cardBg = 'bg-[#FEE2E2] border-[#FCA5A5]'; 
+                                            if(!isToday) dateColor = 'text-[#991B1B]'; 
+                                            shiftColor = 'text-[#EF4444]'; 
+                                            lunarColor = 'text-[#EF4444]';
+                                        }
+                                        weddingBadgeText = <div className={`text-[11px] font-extrabold w-full text-center mt-auto pb-0.5 tracking-wider whitespace-nowrap overflow-visible ${isTentative ? 'text-[#B45309]' : 'text-[#991B1B]'}`}>{displayText}</div>;
                                     } else {
                                         cardBg = 'bg-[#FFEDD5] border-[#FDBA74]'; 
                                         if(!isToday) dateColor = 'text-[#9A3412]'; 
@@ -604,7 +621,7 @@
                                         if (weddingInfo.usePublicHoliday && !weddingInfo.hasSubstitute) prefix = '休';
                                         if (weddingInfo.usePublicHoliday && weddingInfo.hasSubstitute) prefix = '替/休';
                                         
-                                        weddingBadgeText = <div className="text-[#9A3412] text-[11px] font-extrabold w-full text-center mt-auto pb-0.5 tracking-wider whitespace-nowrap overflow-visible">{prefix}·{locText}</div>;
+                                        weddingBadgeText = <div className="text-[#9A3412] text-[11px] font-extrabold w-full text-center mt-auto pb-0.5 tracking-wider whitespace-nowrap overflow-visible">{prefix}·{displayText}</div>;
                                     }
                                 } else if (aptList.length > 0) {
                                     const firstApt = aptList[0];
@@ -708,6 +725,14 @@
                                 <div className="flex items-center gap-2">
                                     <div className="w-5 h-5 rounded-md bg-[#FEF2F2] border border-[#FCA5A5]"></div>
                                     <span className="truncate">行程冲突 (上班)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 rounded-md bg-[#FFFDF2] border border-dashed border-[#FCD34D]"></div>
+                                    <span className="truncate">意向预留 (上班)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 rounded-md bg-[#FAF5FF] border border-dashed border-[#C7D2FE]"></div>
+                                    <span className="truncate">意向预留 (休息)</span>
                                 </div>
                                 <div className="flex items-center gap-2 col-span-2">
                                     <div className="w-5 h-5 rounded-md bg-[#FFEDD5] border border-[#FDBA74]"></div>
@@ -839,7 +864,9 @@
 
                                                 {isWork && (weddingInfo.hasWedding || aptList.length > 0) && (() => {
                                                     const isResolved = weddingInfo.hasSubstitute || weddingInfo.usePublicHoliday;
-                                                    const conflictType = weddingInfo.hasWedding ? '婚礼档期' : '行程预约';
+                                                    const conflictType = weddingInfo.hasWedding 
+                                                        ? (weddingInfo.isTentative ? '意向预备婚礼' : '婚礼档期') 
+                                                        : '行程预约';
                                                     return (
                                                         <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
                                                             <div className="text-xs text-gray-400 font-semibold mb-1 uppercase tracking-wider">冲突解决与请假</div>
@@ -926,6 +953,19 @@
                                                                     ))}
                                                                 </div>
                                                             </div>
+
+                                                            <label className="flex items-center justify-between bg-[#F2F2F7] p-3 rounded-xl cursor-pointer active:opacity-85 transition-all">
+                                                                <span className="text-[13px] font-semibold text-gray-700">仅意向预留 (尚未最终确定)</span>
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    className="w-5 h-5 rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
+                                                                    checked={weddingInfo.isTentative || false}
+                                                                    onChange={(e) => setWeddings(prev => ({
+                                                                        ...prev,
+                                                                        [dateStr]: { ...weddingInfo, isTentative: e.target.checked }
+                                                                    }))}
+                                                                />
+                                                            </label>
 
                                                             <div>
                                                                 <div className="text-xs text-gray-400 font-semibold mb-2 ml-1">详细备注</div>
