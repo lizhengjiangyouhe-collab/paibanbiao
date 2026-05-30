@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dangqi-guanjia-v5';
+const CACHE_NAME = 'dangqi-guanjia-v6';
 const urlsToCache = [
   './',
   './index.html',

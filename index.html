@@ -609,20 +609,19 @@
                                 } else if (aptList.length > 0) {
                                     const firstApt = aptList[0];
                                     const aptLabel = APPOINTMENT_TYPES[firstApt.type]?.label || '行程';
-                                    const aptEmoji = APPOINTMENT_TYPES[firstApt.type]?.emoji || '📅';
                                     
                                     if (!isWork) {
                                         cardBg = 'bg-[#FAF5FF] border-[#E9D5FF]'; 
                                         if(!isToday) dateColor = 'text-[#6B21A8]'; 
                                         shiftColor = 'text-[#9333EA]'; 
                                         lunarColor = 'text-[#9333EA]';
-                                        weddingBadgeText = <div className="text-[#6B21A8] text-[11px] font-extrabold w-full text-center mt-auto pb-0.5 tracking-wider whitespace-nowrap overflow-visible">{aptEmoji} {aptLabel}</div>;
+                                        weddingBadgeText = <div className="text-[#6B21A8] text-[11px] font-extrabold w-full text-center mt-auto pb-0.5 tracking-wider whitespace-nowrap overflow-visible">{aptLabel}</div>;
                                     } else if (!weddingInfo.hasSubstitute && !weddingInfo.usePublicHoliday) {
                                         cardBg = 'bg-[#FEF2F2] border-[#FCA5A5]'; 
                                         if(!isToday) dateColor = 'text-[#991B1B]'; 
                                         shiftColor = 'text-[#EF4444]'; 
                                         lunarColor = 'text-[#EF4444]';
-                                        weddingBadgeText = <div className="text-[#991B1B] text-[11px] font-extrabold w-full text-center mt-auto pb-0.5 tracking-wider whitespace-nowrap overflow-visible">🚨 {aptEmoji}{aptLabel}</div>;
+                                        weddingBadgeText = <div className="text-[#991B1B] text-[11px] font-extrabold w-full text-center mt-auto pb-0.5 tracking-wider whitespace-nowrap overflow-visible">{aptLabel}</div>;
                                     } else {
                                         cardBg = 'bg-[#FFEDD5] border-[#FDBA74]'; 
                                         if(!isToday) dateColor = 'text-[#9A3412]'; 
