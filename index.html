@@ -12,8 +12,6 @@
     <link rel="manifest" href="manifest.json">
     <title>档期管家 - 排班与婚礼档期管理</title>
 
-    <meta http-equiv="Cache-Control" content="public, max-age=86400">
-
     <script src="libs/tailwindcss.js"></script>
     <script src="libs/react.production.min.js"></script>
     <script src="libs/react-dom.production.min.js"></script>
@@ -1167,9 +1165,14 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => {
-                    console.log('ServiceWorker registration failed:', err);
-                });
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        // 强制浏览器在每次打开时检测sw.js是否有更新，提升PWA热更新响应速度
+                        registration.update();
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed:', err);
+                    });
             });
         }
 
